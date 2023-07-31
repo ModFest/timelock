@@ -1,5 +1,6 @@
 package com.acikek.timelock.client;
 
+import com.acikek.timelock.TimelockData;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -9,16 +10,33 @@ import net.minecraft.util.math.ChunkPos;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Environment(EnvType.CLIENT)
 public class TimelockClient implements ClientModInitializer {
 
-    public static Map<ChunkPos, Integer> timelockData = new HashMap<>();
+    private static Map<ChunkPos, Long> chunkData = new HashMap<>();
+    private static TimelockData timelock = null;
 
-    public static ChunkPos lockingChunk;
-    public static long time;
+    public static Optional<TimelockData> timelock() {
+        return Optional.ofNullable(timelock);
+    }
 
-    public static long targetTime;
+    public static void update(ChunkPos pos) {
+        if (timelock != null && timelock.pos().equals(pos)) {
+            return;
+        }
+        Long time = chunkData.get(pos);
+        if (time == null) {
+            if (timelock != null) {
+                timelock = null;
+            }
+            return;
+        }
+        timelock = new TimelockData(pos, time);
+    }
+
+    /*public static long targetTime;
     public static long increment;
     public static long targetEnding;
 
@@ -42,22 +60,21 @@ public class TimelockClient implements ClientModInitializer {
 
     public static boolean canIncrement(long target) {
         return (increment > 0 && time < target) || (increment < 0 && time > target);
-    }
+    }*/
 
     public static long getTimeOfDay() {
         return MinecraftClient.getInstance().world.getLevelProperties().getTimeOfDay();
     }
 
-    public static long estimateEnding() {
+    /*public static long estimateEnding() {
         return getTimeOfDay() + 2L;
-    }
+    }*/
 
     @Override
     public void onInitializeClient() {
-        resetLockingChunk(false);
-        timelockData.put(new ChunkPos(1, 1), 19000);
+        chunkData.put(new ChunkPos(1, 1), 19000L);
 
-        ClientTickEvents.END_WORLD_TICK.register(world -> {
+        /*ClientTickEvents.END_WORLD_TICK.register(world -> {
             if (targetTime != -1L && canIncrement(targetTime)) {
                 System.out.println(increment);
                 time += increment;
@@ -73,6 +90,6 @@ public class TimelockClient implements ClientModInitializer {
                     targetEnding = -1L;
                 }
             }
-        });
+        });*/
     }
 }
