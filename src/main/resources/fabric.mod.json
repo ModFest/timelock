@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "timelock",
+  "version": "${version}",
+  "name": "Timelock",
+  "description": "Visually lock time in specific chunks",
+  "authors": [
+    "acikek"
+  ],
+  "contact": {
+    "website": "https://github.com/acikek/timelock",
+    "repo": "https://github.com/acikek/timelock"
+  },
+  "license": "MIT",
+  "icon": "assets/timelock/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "com.acikek.timelock.client.TimelockClient"
+    ],
+    "main": [
+      "com.acikek.timelock.Timelock"
+    ]
+  },
+  "mixins": [
+    "timelock.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.11",
+    "fabric": "*",
+    "minecraft": "1.19.2"
+  }
+}
