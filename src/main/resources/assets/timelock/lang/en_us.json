@@ -1,0 +1,5 @@
+{
+  "command.timelock.zone.set": "Set zone '%s' to %s ticks",
+  "command.timelock.zone.delete": "Deleted zone '%s' and updated %s chunks",
+  "error.timelock.invalid_zone": "Unknown zone '%s'"
+}

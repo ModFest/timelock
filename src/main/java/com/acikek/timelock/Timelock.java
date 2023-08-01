@@ -1,5 +1,6 @@
 package com.acikek.timelock;
 
+import com.acikek.timelock.command.TimelockCommand;
 import com.acikek.timelock.network.TimelockNetworking;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
@@ -20,5 +21,6 @@ public class Timelock implements ModInitializer {
     public void onInitialize() {
         LOGGER.info("Initializing Timelock...");
         TimelockNetworking.register();
+        TimelockCommand.register();
     }
 }
