@@ -12,6 +12,7 @@ import net.minecraft.world.PersistentState;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class TimelockData extends PersistentState {
 

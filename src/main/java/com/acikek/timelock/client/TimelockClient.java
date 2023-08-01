@@ -1,6 +1,7 @@
 package com.acikek.timelock.client;
 
 import com.acikek.timelock.TimelockChunk;
+import com.acikek.timelock.network.TimelockNetworking;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -20,8 +21,26 @@ public class TimelockClient implements ClientModInitializer {
         return Optional.ofNullable(timelock);
     }
 
-    public static void update(ChunkPos pos) {
-        if (timelock != null && timelock.pos().equals(pos)) {
+    public static boolean isInTimelock(ChunkPos pos) {
+        return timelock != null && timelock.pos().equals(pos);
+    }
+
+    public static void putData(Map<ChunkPos, Long> chunkData) {
+        TimelockClient.chunkData = chunkData;
+        TimelockClient.chunkData.put(new ChunkPos(1, 1), 19000L);
+        System.out.println(chunkData);
+    }
+
+    public static void updateData(ChunkPos pos, Optional<Long> time) {
+        time.ifPresent(value -> chunkData.put(pos, value));
+        if (time.isEmpty()) {
+            chunkData.remove(pos);
+        }
+        TimelockClient.tick(pos, true);
+    }
+
+    public static void tick(ChunkPos pos, boolean inTimelock) {
+        if (isInTimelock(pos) != inTimelock) {
             return;
         }
         Long time = chunkData.get(pos);
@@ -34,8 +53,12 @@ public class TimelockClient implements ClientModInitializer {
         timelock = new TimelockChunk(pos, time);
     }
 
+    public static void tick(ChunkPos pos) {
+        tick(pos, false);
+    }
+
     @Override
     public void onInitializeClient() {
-        chunkData.put(new ChunkPos(1, 1), 19000L);
+        TimelockNetworking.registerClient();
     }
 }

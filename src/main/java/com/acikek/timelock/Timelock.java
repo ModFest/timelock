@@ -1,5 +1,6 @@
 package com.acikek.timelock;
 
+import com.acikek.timelock.network.TimelockNetworking;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.LogManager;
@@ -18,5 +19,6 @@ public class Timelock implements ModInitializer {
     @Override
     public void onInitialize() {
         LOGGER.info("Initializing Timelock...");
+        TimelockNetworking.register();
     }
 }
