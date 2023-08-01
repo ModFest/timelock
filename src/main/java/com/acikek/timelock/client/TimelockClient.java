@@ -1,11 +1,9 @@
 package com.acikek.timelock.client;
 
-import com.acikek.timelock.TimelockData;
+import com.acikek.timelock.TimelockChunk;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.HashMap;
@@ -16,9 +14,9 @@ import java.util.Optional;
 public class TimelockClient implements ClientModInitializer {
 
     private static Map<ChunkPos, Long> chunkData = new HashMap<>();
-    private static TimelockData timelock = null;
+    private static TimelockChunk timelock = null;
 
-    public static Optional<TimelockData> timelock() {
+    public static Optional<TimelockChunk> timelock() {
         return Optional.ofNullable(timelock);
     }
 
@@ -33,7 +31,7 @@ public class TimelockClient implements ClientModInitializer {
             }
             return;
         }
-        timelock = new TimelockData(pos, time);
+        timelock = new TimelockChunk(pos, time);
     }
 
     @Override
