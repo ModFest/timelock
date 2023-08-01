@@ -36,6 +36,11 @@ public class TimelockData extends PersistentState {
         return chunks;
     }
 
+    public Map<ChunkPos, Long> getData() {
+        return chunks.entries().stream()
+                .collect(Collectors.toMap(Map.Entry::getValue, e -> zones.get(e.getKey())));
+    }
+
     public static TimelockData fromNbt(NbtCompound nbt) {
         var zoneNbt = nbt.getCompound("Zones");
         Map<Identifier, Long> zones = new HashMap<>();
