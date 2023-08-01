@@ -23,6 +23,7 @@ public class TimelockNetworking {
 
     public static final Identifier PUT_DATA = Timelock.id("put_data");
     public static final Identifier UPDATE_DATA = Timelock.id("update_data");
+    public static final Identifier START_SELECTION = Timelock.id("start_selection");
 
     public static void s2cPutData(Collection<ServerPlayerEntity> players, ServerWorld world) {
         var buf = PacketByteBufs.create();
@@ -42,6 +43,12 @@ public class TimelockNetworking {
         }
     }
 
+    public static void s2cStartSelection(ServerPlayerEntity player, Identifier zone) {
+        var buf = PacketByteBufs.create();
+        buf.writeIdentifier(zone);
+        ServerPlayNetworking.send(player, START_SELECTION, buf);
+    }
+
     @Environment(EnvType.CLIENT)
     public static void registerClient() {
         ClientPlayNetworking.registerGlobalReceiver(PUT_DATA, (client, handler, buf, responseSender) -> {
@@ -53,6 +60,10 @@ public class TimelockNetworking {
             final var time = buf.readOptional(PacketByteBuf::readLong);
             client.execute(() -> TimelockClient.updateData(chunk, time));
         });
+        ClientPlayNetworking.registerGlobalReceiver(START_SELECTION, (client, handler, buf, responseSender) -> {
+            final var zone = buf.readIdentifier();
+            client.execute(() -> TimelockClient.startSelection(zone));
+        })
     }
 
     public static void register() {

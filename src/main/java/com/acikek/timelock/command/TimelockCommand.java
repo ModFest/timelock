@@ -48,6 +48,8 @@ public class TimelockCommand {
         return Command.SINGLE_SUCCESS;
     }
 
+    public
+
     public static CompletableFuture<Suggestions> suggestZones(CommandContext<ServerCommandSource> context, SuggestionsBuilder builder) {
         var data = TimelockData.get(context.getSource().getWorld());
         for (var id : data.zones().keySet()) {
@@ -67,10 +69,12 @@ public class TimelockCommand {
                                                         .executes(TimelockCommand::setZone)))
                                         .then(literal("delete")
                                                 .executes(TimelockCommand::deleteZone))))
-                        .then(literal("select")
-                                .then(argument("zone", IdentifierArgumentType.identifier())
-                                        .suggests(TimelockCommand::suggestZones)))
-                        .then(literal("commit"))
+                        .then(literal("selection")
+                                .then(literal("start")
+                                        .then(argument("zone", IdentifierArgumentType.identifier())
+                                                .suggests(TimelockCommand::suggestZones)))
+                                .then(literal("abort"))
+                                .then(literal("commit")))
                         .requires(source -> source.hasPermissionLevel(4))));
     }
 }

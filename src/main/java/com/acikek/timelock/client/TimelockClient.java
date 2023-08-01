@@ -1,28 +1,31 @@
 package com.acikek.timelock.client;
 
-import com.acikek.timelock.TimelockChunk;
 import com.acikek.timelock.network.TimelockNetworking;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.ChunkPos;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Environment(EnvType.CLIENT)
 public class TimelockClient implements ClientModInitializer {
 
     private static Map<ChunkPos, Long> chunkData = new HashMap<>();
-    private static TimelockChunk timelock = null;
 
-    public static Optional<TimelockChunk> timelock() {
-        return Optional.ofNullable(timelock);
+    private static ChunkPos timelockChunk = null;
+    private static Long timelockValue = null;
+
+    private static Identifier selectionZone = null;
+    private static final List<ChunkPos> selectionChunks = new ArrayList<>();
+
+    public static Optional<Long> timelock() {
+        return Optional.ofNullable(timelockValue);
     }
 
     public static boolean isInTimelock(ChunkPos pos) {
-        return timelock != null && timelock.pos().equals(pos);
+        return timelockChunk != null && timelockChunk.equals(pos);
     }
 
     public static void putData(Map<ChunkPos, Long> chunkData) {
@@ -39,18 +42,20 @@ public class TimelockClient implements ClientModInitializer {
         TimelockClient.tick(pos, true);
     }
 
+    public static void startSelection(Identifier zone) {
+        selectionZone = zone;
+    }
+
+    public static void clearSelection() {
+        selectionZone = null;
+        selectionChunks.clear();
+    }
+
     public static void tick(ChunkPos pos, boolean inTimelock) {
-        if (isInTimelock(pos) != inTimelock) {
-            return;
+        if (isInTimelock(pos) == inTimelock) {
+            timelockValue = chunkData.get(pos);
+            timelockChunk = timelockValue == null ? pos : null;
         }
-        Long time = chunkData.get(pos);
-        if (time == null) {
-            if (timelock != null) {
-                timelock = null;
-            }
-            return;
-        }
-        timelock = new TimelockChunk(pos, time);
     }
 
     public static void tick(ChunkPos pos) {

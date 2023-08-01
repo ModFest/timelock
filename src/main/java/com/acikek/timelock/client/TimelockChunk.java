@@ -1,4 +1,4 @@
-package com.acikek.timelock;
+package com.acikek.timelock.client;
 
 import net.minecraft.util.math.ChunkPos;
 
