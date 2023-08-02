@@ -49,6 +49,9 @@ public class TimelockNetworking {
     public static void s2cStartSelection(ServerPlayerEntity player, Identifier zone) {
         var buf = PacketByteBufs.create();
         buf.writeIdentifier(zone);
+        var manager = TimelockData.get(player.getServerWorld());
+        buf.writeLong(manager.zones().get(zone));
+        buf.writeCollection(manager.chunks().get(zone), PacketByteBuf::writeChunkPos);
         ServerPlayNetworking.send(player, START_SELECTION, buf);
     }
 
@@ -69,7 +72,9 @@ public class TimelockNetworking {
         });
         ClientPlayNetworking.registerGlobalReceiver(START_SELECTION, (client, handler, buf, responseSender) -> {
             final var zone = buf.readIdentifier();
-            client.execute(() -> TimelockClient.startSelection(zone));
+            final var time = buf.readLong();
+            final var chunks = buf.readCollection(ArrayList::new, PacketByteBuf::readChunkPos);
+            client.execute(() -> TimelockClient.startSelection(zone, time, chunks));
         });
         ClientPlayNetworking.registerGlobalReceiver(QUERY_SELECTION, (client, handler, buf, responseSender) -> {
             client.execute(TimelockClient::sendSelection);
@@ -90,6 +95,8 @@ public class TimelockNetworking {
             server.execute(() -> {
                 var time = Optional.ofNullable(manager.zones().get(zone));
                 s2cUpdateData(players, chunks, time);
+                manager.chunks().replaceValues(zone, chunks);
+                manager.markDirty();
             });
         });
     }

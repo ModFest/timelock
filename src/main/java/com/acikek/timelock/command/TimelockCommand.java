@@ -40,6 +40,7 @@ public class TimelockCommand {
     public static int deleteZone(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         Identifier id = IdentifierArgumentType.getIdentifier(context, "id");
         var data = TimelockData.get(context.getSource().getWorld());
+        System.out.println(data.chunks());
         var zone = data.zones().remove(id);
         if (zone == null) {
             throw INVALID_ZONE.create(id);

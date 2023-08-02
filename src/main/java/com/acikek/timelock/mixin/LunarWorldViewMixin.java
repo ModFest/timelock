@@ -12,6 +12,6 @@ public interface LunarWorldViewMixin {
 
     @Inject(method = "getSkyAngle", cancellable = true, at = @At(value = "HEAD"))
     private void timelock$modifyTimeOfDay(float tickDelta, CallbackInfoReturnable<Float> cir) {
-        TimelockClient.timelock().ifPresent(data -> cir.setReturnValue((float) data));
+        TimelockClient.getCurrentTimelock().ifPresent(data -> cir.setReturnValue((float) data));
     }
 }

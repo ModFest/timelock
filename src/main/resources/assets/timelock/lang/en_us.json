@@ -6,5 +6,7 @@
   "command.timelock.selection.commit": "Querying selection from client",
   "command.timelock.selection.commit_client": "Committing %s chunks for zone '%s'",
   "error.timelock.invalid_zone": "Unknown zone '%s'",
-  "error.timelock.selection_in_progress": "Selection already in progress; run '/timelock abort' to clear it"
+  "error.timelock.selection_in_progress": "Selection already in progress; run '/timelock abort' to clear it",
+  "message.timelock.chunk_select": "Selected chunk %s",
+  "message.timelock.chunk_deselect": "De-selected chunk %s"
 }
