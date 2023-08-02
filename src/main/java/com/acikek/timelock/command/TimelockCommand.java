@@ -1,5 +1,6 @@
 package com.acikek.timelock.command;
 
+import com.acikek.timelock.network.TimelockNetworking;
 import com.acikek.timelock.world.TimelockData;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.LongArgumentType;
@@ -14,6 +15,7 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static net.minecraft.server.command.CommandManager.argument;
@@ -45,10 +47,25 @@ public class TimelockCommand {
         var chunks = data.chunks().removeAll(id);
         data.markDirty();
         context.getSource().sendFeedback(() -> Text.translatable("command.timelock.zone.delete", id, chunks.size()), true);
+        TimelockNetworking.s2cUpdateData(context.getSource().getWorld().getPlayers(), chunks, Optional.empty());
         return Command.SINGLE_SUCCESS;
     }
 
-    public
+    public static int startSelection(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        Identifier id = IdentifierArgumentType.getIdentifier(context, "zone");
+        if (!TimelockData.get(context.getSource().getWorld()).zones().containsKey(id)) {
+            throw INVALID_ZONE.create(id);
+        }
+        context.getSource().sendFeedback(() -> Text.translatable("command.timelock.selection.start"), true);
+        TimelockNetworking.s2cStartSelection(context.getSource().getPlayer(), id);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    public static int commitSelection(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        context.getSource().sendFeedback(() -> Text.translatable("command.timelock.selection.commit"), true);
+        TimelockNetworking.s2cQuerySelection(context.getSource().getPlayer());
+        return Command.SINGLE_SUCCESS;
+    }
 
     public static CompletableFuture<Suggestions> suggestZones(CommandContext<ServerCommandSource> context, SuggestionsBuilder builder) {
         var data = TimelockData.get(context.getSource().getWorld());
@@ -72,9 +89,11 @@ public class TimelockCommand {
                         .then(literal("selection")
                                 .then(literal("start")
                                         .then(argument("zone", IdentifierArgumentType.identifier())
-                                                .suggests(TimelockCommand::suggestZones)))
+                                                .suggests(TimelockCommand::suggestZones)
+                                                .executes(TimelockCommand::startSelection)))
                                 .then(literal("abort"))
-                                .then(literal("commit")))
+                                .then(literal("commit")
+                                        .executes(TimelockCommand::commitSelection)))
                         .requires(source -> source.hasPermissionLevel(4))));
     }
 }

@@ -4,6 +4,12 @@ import com.acikek.timelock.network.TimelockNetworking;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.ChunkPos;
 
@@ -31,24 +37,45 @@ public class TimelockClient implements ClientModInitializer {
     public static void putData(Map<ChunkPos, Long> chunkData) {
         TimelockClient.chunkData = chunkData;
         TimelockClient.chunkData.put(new ChunkPos(1, 1), 19000L);
+        System.out.println("received put: " + chunkData);
         System.out.println(chunkData);
     }
 
-    public static void updateData(ChunkPos pos, Optional<Long> time) {
-        time.ifPresent(value -> chunkData.put(pos, value));
-        if (time.isEmpty()) {
-            chunkData.remove(pos);
+    public static void updateData(List<ChunkPos> chunks, Optional<Long> time) {
+        System.out.println("received update: " + chunks);
+        for (var chunk : chunks) {
+            time.ifPresent(value -> chunkData.put(chunk, value));
+            if (time.isEmpty()) {
+                chunkData.remove(chunk);
+            }
+            TimelockClient.tick(chunk, true);
         }
-        TimelockClient.tick(pos, true);
     }
 
     public static void startSelection(Identifier zone) {
+        var player = MinecraftClient.getInstance().player;
+        if (selectionZone != null) {
+            player.sendMessage(Text.translatable("error.timelock.selection_in_progress").formatted(Formatting.RED));
+            return;
+        }
         selectionZone = zone;
+        player.sendMessage(Text.translatable("command.timelock.selection.start_client", zone));
     }
 
     public static void clearSelection() {
         selectionZone = null;
         selectionChunks.clear();
+    }
+
+    public static void sendSelection() {
+        var buf = PacketByteBufs.create();
+        buf.writeIdentifier(selectionZone);
+        buf.writeCollection(selectionChunks, PacketByteBuf::writeChunkPos);
+        ClientPlayNetworking.send(TimelockNetworking.SEND_SELECTION, buf);
+        MinecraftClient.getInstance().player.sendMessage(
+                Text.translatable("command.timelock.selection.commit_client", selectionChunks.size(), selectionZone)
+        );
+        clearSelection();
     }
 
     public static void tick(ChunkPos pos, boolean inTimelock) {

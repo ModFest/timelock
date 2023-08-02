@@ -1,5 +1,10 @@
 {
   "command.timelock.zone.set": "Set zone '%s' to %s ticks",
   "command.timelock.zone.delete": "Deleted zone '%s' and updated %s chunks",
-  "error.timelock.invalid_zone": "Unknown zone '%s'"
+  "command.timelock.selection.start": "Sent selection start to client",
+  "command.timelock.selection.start_client": "Successfully started selection for zone '%s'",
+  "command.timelock.selection.commit": "Querying selection from client",
+  "command.timelock.selection.commit_client": "Committing %s chunks for zone '%s'",
+  "error.timelock.invalid_zone": "Unknown zone '%s'",
+  "error.timelock.selection_in_progress": "Selection already in progress; run '/timelock abort' to clear it"
 }
