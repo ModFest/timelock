@@ -60,6 +60,8 @@ public class TimelockCommand {
         if (time == null) {
             throw INVALID_ZONE.create(id);
         }
+        var chunks = data.chunks().get(id).size();
+        context.getSource().sendFeedback(() -> Text.translatable("command.timelock.zone.inspect", id, time, chunks), false);
         return Command.SINGLE_SUCCESS;
     }
 
