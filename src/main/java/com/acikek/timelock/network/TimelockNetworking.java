@@ -25,6 +25,7 @@ public class TimelockNetworking {
     public static final Identifier PUT_DATA = Timelock.id("put_data");
     public static final Identifier UPDATE_DATA = Timelock.id("update_data");
     public static final Identifier START_SELECTION = Timelock.id("start_selection");
+    public static final Identifier CLEAR_SELECTION = Timelock.id("clear_selection");
     public static final Identifier QUERY_SELECTION = Timelock.id("query_selection");
     public static final Identifier SEND_SELECTION = Timelock.id("send_selection");
 
@@ -55,6 +56,10 @@ public class TimelockNetworking {
         ServerPlayNetworking.send(player, START_SELECTION, buf);
     }
 
+    public static void s2cClearSelection(ServerPlayerEntity player) {
+        ServerPlayNetworking.send(player, CLEAR_SELECTION, PacketByteBufs.empty());
+    }
+
     public static void s2cQuerySelection(ServerPlayerEntity player) {
         ServerPlayNetworking.send(player, QUERY_SELECTION, PacketByteBufs.empty());
     }
@@ -75,6 +80,9 @@ public class TimelockNetworking {
             final var time = buf.readLong();
             final var chunks = buf.readCollection(ArrayList::new, PacketByteBuf::readChunkPos);
             client.execute(() -> TimelockClient.startSelection(zone, time, chunks));
+        });
+        ClientPlayNetworking.registerGlobalReceiver(CLEAR_SELECTION, (client, handler, buf, responseSender) -> {
+            client.execute(TimelockClient::clearSelection);
         });
         ClientPlayNetworking.registerGlobalReceiver(QUERY_SELECTION, (client, handler, buf, responseSender) -> {
             client.execute(TimelockClient::sendSelection);

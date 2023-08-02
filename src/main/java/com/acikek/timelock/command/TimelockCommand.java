@@ -1,5 +1,6 @@
 package com.acikek.timelock.command;
 
+import com.acikek.timelock.Timelock;
 import com.acikek.timelock.network.TimelockNetworking;
 import com.acikek.timelock.world.TimelockData;
 import com.mojang.brigadier.Command;
@@ -52,18 +53,34 @@ public class TimelockCommand {
         return Command.SINGLE_SUCCESS;
     }
 
+    public static int inspectZone(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        Identifier id = IdentifierArgumentType.getIdentifier(context, "id");
+        var data = TimelockData.get(context.getSource().getWorld());
+        var time = data.zones().get(id);
+        if (time == null) {
+            throw INVALID_ZONE.create(id);
+        }
+        return Command.SINGLE_SUCCESS;
+    }
+
     public static int startSelection(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         Identifier id = IdentifierArgumentType.getIdentifier(context, "zone");
         if (!TimelockData.get(context.getSource().getWorld()).zones().containsKey(id)) {
             throw INVALID_ZONE.create(id);
         }
-        context.getSource().sendFeedback(() -> Text.translatable("command.timelock.selection.start"), true);
+        Timelock.LOGGER.debug("Sending selection start to client ({})", context.getSource().getPlayer().getUuid());
         TimelockNetworking.s2cStartSelection(context.getSource().getPlayer(), id);
         return Command.SINGLE_SUCCESS;
     }
 
+    public static int abortSelection(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        Timelock.LOGGER.debug("Sending selection abort to client ({})", context.getSource().getPlayer().getUuid());
+        TimelockNetworking.s2cClearSelection(context.getSource().getPlayer());
+        return Command.SINGLE_SUCCESS;
+    }
+
     public static int commitSelection(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-        context.getSource().sendFeedback(() -> Text.translatable("command.timelock.selection.commit"), true);
+        Timelock.LOGGER.debug("Querying commit data from client ({})", context.getSource().getPlayer().getUuid());
         TimelockNetworking.s2cQuerySelection(context.getSource().getPlayer());
         return Command.SINGLE_SUCCESS;
     }
@@ -86,13 +103,16 @@ public class TimelockCommand {
                                                 .then(argument("time", LongArgumentType.longArg(0L, 24000L))
                                                         .executes(TimelockCommand::setZone)))
                                         .then(literal("delete")
-                                                .executes(TimelockCommand::deleteZone))))
+                                                .executes(TimelockCommand::deleteZone))
+                                        .then(literal("info")
+                                                .executes(TimelockCommand::inspectZone))))
                         .then(literal("selection")
                                 .then(literal("start")
                                         .then(argument("zone", IdentifierArgumentType.identifier())
                                                 .suggests(TimelockCommand::suggestZones)
                                                 .executes(TimelockCommand::startSelection)))
-                                .then(literal("abort"))
+                                .then(literal("abort")
+                                        .executes(TimelockCommand::abortSelection))
                                 .then(literal("commit")
                                         .executes(TimelockCommand::commitSelection)))
                         .requires(source -> source.hasPermissionLevel(4))));
