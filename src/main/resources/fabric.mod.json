@@ -20,6 +20,9 @@
     ],
     "main": [
       "com.acikek.timelock.Timelock"
+    ],
+    "modmenu": [
+      "com.acikek.timelock.client.config.TimelockModMenuIntegration"
     ]
   },
   "mixins": [
@@ -28,6 +31,9 @@
   "depends": {
     "fabricloader": ">=0.14.11",
     "fabric": "*",
-    "minecraft": "1.20.1"
+    "minecraft": "~1.20.1"
+  },
+  "suggests": {
+    "yet_another_config_lib": "^3.0.0+1.20"
   }
 }

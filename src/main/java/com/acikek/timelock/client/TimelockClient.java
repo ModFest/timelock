@@ -1,7 +1,9 @@
 package com.acikek.timelock.client;
 
 import com.acikek.timelock.Timelock;
+import com.acikek.timelock.client.config.TimelockConfig;
 import com.acikek.timelock.network.TimelockNetworking;
+import dev.isxander.yacl3.api.Binding;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -34,7 +36,12 @@ public class TimelockClient implements ClientModInitializer {
     private static long selectionTime = -1L;
     private static final List<ChunkPos> selectionChunks = new ArrayList<>();
 
+    private static TimelockConfig config;
+
     public static Optional<Float> getSkyAngle() {
+        if (!config.enable) {
+            return Optional.empty();
+        }
         return Optional.ofNullable(timelockSkyAngle != -1.0f ? timelockSkyAngle : null);
     }
 
@@ -113,7 +120,7 @@ public class TimelockClient implements ClientModInitializer {
     }
 
     public static void tick(ChunkPos pos, boolean inTimelock) {
-        if (inTimelock(pos) == inTimelock) {
+        if (config.enable && inTimelock(pos) == inTimelock) {
             timelockValue = getChunkTimelock(pos);
             timelockChunk = timelockValue != -1L ? pos : null;
             timelockSkyAngle = timelockValue != -1L ? getSkyAngle(timelockValue) : -1.0f;
@@ -153,5 +160,25 @@ public class TimelockClient implements ClientModInitializer {
             }
             return ActionResult.PASS;
         });
+        config = TimelockConfig.read();
     }
+
+    public static final Binding<Boolean> ENABLE_BINDING = new Binding<>() {
+
+        @Override
+        public void setValue(Boolean value) {
+            config.enable = value;
+            config.write();
+        }
+
+        @Override
+        public Boolean getValue() {
+            return config.enable;
+        }
+
+        @Override
+        public Boolean defaultValue() {
+            return true;
+        }
+    };
 }

@@ -10,5 +10,7 @@
   "error.timelock.not_elevated": "You don't have permission to commit Timelock edits!",
   "error.timelock.no_selection_client": "No selection in progress",
   "message.timelock.chunk_select": "Selected chunk %s",
-  "message.timelock.chunk_deselect": "De-selected chunk %s"
+  "message.timelock.chunk_deselect": "De-selected chunk %s",
+  "config.timelock.enable.name": "Enable",
+  "config.timelock.enable.description": "Whether timelocked chunks should change the client-side world time"
 }
