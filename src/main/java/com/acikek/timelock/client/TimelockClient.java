@@ -17,6 +17,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.MathHelper;
 
 import java.util.*;
 
@@ -26,26 +27,32 @@ public class TimelockClient implements ClientModInitializer {
     private static final Map<ChunkPos, Long> chunkData = new HashMap<>();
 
     private static ChunkPos timelockChunk = null;
-    private static Long timelockValue = null;
+    private static long timelockValue = -1L;
+    private static float timelockSkyAngle = -1.0f;
 
     private static Identifier selectionZone = null;
-    private static Long selectionTime = null;
+    private static long selectionTime = -1L;
     private static final List<ChunkPos> selectionChunks = new ArrayList<>();
 
-    public static Optional<Long> getCurrentTimelock() {
-        return Optional.ofNullable(timelockValue);
+    public static Optional<Float> getSkyAngle() {
+        return Optional.ofNullable(timelockSkyAngle != -1.0f ? timelockSkyAngle : null);
     }
 
     public static boolean inTimelock(ChunkPos pos) {
         return timelockChunk != null && timelockChunk.equals(pos);
     }
 
-    public static Long getChunkTimelock(ChunkPos pos) {
-        if (selectionTime == null) {
-            return chunkData.get(pos);
+    public static Identifier getSelectionZone() {
+        return selectionZone;
+    }
+
+    public static long getChunkTimelock(ChunkPos pos) {
+        if (selectionTime == -1L) {
+            var time = chunkData.get(pos);
+            return time != null ? time : -1L;
         }
         if (!selectionChunks.contains(pos)) {
-            return null;
+            return -1L;
         }
         return selectionTime;
     }
@@ -81,7 +88,7 @@ public class TimelockClient implements ClientModInitializer {
 
     public static void clearSelection() {
         selectionZone = null;
-        selectionTime = null;
+        selectionTime = -1L;
         selectionChunks.clear();
     }
 
@@ -99,15 +106,26 @@ public class TimelockClient implements ClientModInitializer {
         clearSelection();
     }
 
+    private static float getSkyAngle(long time) {
+        double d = MathHelper.fractionalPart(time / 24000.0 - 0.25);
+        double e = 0.5 - Math.cos(d * Math.PI) / 2.0;
+        return (float) (d * 2.0 + e) / 3.0f;
+    }
+
     public static void tick(ChunkPos pos, boolean inTimelock) {
         if (inTimelock(pos) == inTimelock) {
             timelockValue = getChunkTimelock(pos);
-            timelockChunk = timelockValue == null ? pos : null;
+            timelockChunk = timelockValue != -1L ? pos : null;
+            timelockSkyAngle = timelockValue != -1L ? getSkyAngle(timelockValue) : -1.0f;
         }
     }
 
     public static void tick(ChunkPos pos) {
         tick(pos, false);
+    }
+
+    public static void resetTimelock() {
+        tick(timelockChunk, true);
     }
 
     public static void select(BlockPos pos) {
@@ -128,6 +146,7 @@ public class TimelockClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         TimelockNetworking.registerClient();
+        TimelockClientCommand.register();
         UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
             if (selectionZone != null && hand == Hand.MAIN_HAND && world.isClient()) {
                 select(hitResult.getBlockPos());

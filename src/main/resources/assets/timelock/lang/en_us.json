@@ -1,10 +1,14 @@
 {
   "command.timelock.zone.set": "Set zone '%s' to %s ticks",
   "command.timelock.zone.delete": "Deleted zone '%s' and updated %s chunks",
-  "command.timelock.selection.start_client": "Successfully started selection for zone '%s'",
+  "command.timelock.zone.inspect": "",
+  "command.timelock.selection.start_client": "Editing selection for zone '%s'",
+  "command.timelock.selection.abort_client": "Aborted current selection for zone '%s'; no edits committed",
   "command.timelock.selection.commit_client": "Committing %s chunks for zone '%s'",
   "error.timelock.invalid_zone": "Unknown zone '%s'",
   "error.timelock.selection_in_progress": "Selection already in progress; run '/timelock abort' to clear it",
+  "error.timelock.not_elevated": "You don't have permission to commit Timelock edits!",
+  "error.timelock.no_selection_client": "No selection in progress",
   "message.timelock.chunk_select": "Selected chunk %s",
   "message.timelock.chunk_deselect": "De-selected chunk %s"
 }

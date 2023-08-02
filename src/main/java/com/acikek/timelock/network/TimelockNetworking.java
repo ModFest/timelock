@@ -12,6 +12,8 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.ChunkPos;
 
@@ -25,8 +27,6 @@ public class TimelockNetworking {
     public static final Identifier PUT_DATA = Timelock.id("put_data");
     public static final Identifier UPDATE_DATA = Timelock.id("update_data");
     public static final Identifier START_SELECTION = Timelock.id("start_selection");
-    public static final Identifier CLEAR_SELECTION = Timelock.id("clear_selection");
-    public static final Identifier QUERY_SELECTION = Timelock.id("query_selection");
     public static final Identifier SEND_SELECTION = Timelock.id("send_selection");
 
     public static void s2cPutData(Collection<ServerPlayerEntity> players, ServerWorld world) {
@@ -56,14 +56,6 @@ public class TimelockNetworking {
         ServerPlayNetworking.send(player, START_SELECTION, buf);
     }
 
-    public static void s2cClearSelection(ServerPlayerEntity player) {
-        ServerPlayNetworking.send(player, CLEAR_SELECTION, PacketByteBufs.empty());
-    }
-
-    public static void s2cQuerySelection(ServerPlayerEntity player) {
-        ServerPlayNetworking.send(player, QUERY_SELECTION, PacketByteBufs.empty());
-    }
-
     @Environment(EnvType.CLIENT)
     public static void registerClient() {
         ClientPlayNetworking.registerGlobalReceiver(PUT_DATA, (client, handler, buf, responseSender) -> {
@@ -81,12 +73,6 @@ public class TimelockNetworking {
             final var chunks = buf.readCollection(ArrayList::new, PacketByteBuf::readChunkPos);
             client.execute(() -> TimelockClient.startSelection(zone, time, chunks));
         });
-        ClientPlayNetworking.registerGlobalReceiver(CLEAR_SELECTION, (client, handler, buf, responseSender) -> {
-            client.execute(TimelockClient::clearSelection);
-        });
-        ClientPlayNetworking.registerGlobalReceiver(QUERY_SELECTION, (client, handler, buf, responseSender) -> {
-            client.execute(TimelockClient::sendSelection);
-        });
     }
 
     public static void register() {
@@ -101,6 +87,10 @@ public class TimelockNetworking {
             final var zone = buf.readIdentifier();
             final var chunks = buf.readCollection(ArrayList::new, PacketByteBuf::readChunkPos);
             server.execute(() -> {
+                if (!player.hasPermissionLevel(4)) {
+                    player.sendMessage(Text.translatable("error.timelock.not_elevated").formatted(Formatting.RED));
+                    return;
+                }
                 var time = Optional.ofNullable(manager.zones().get(zone));
                 s2cUpdateData(players, chunks, time);
                 manager.chunks().replaceValues(zone, chunks);

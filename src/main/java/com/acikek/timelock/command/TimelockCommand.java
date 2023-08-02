@@ -73,18 +73,6 @@ public class TimelockCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    public static int abortSelection(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-        Timelock.LOGGER.debug("Sending selection abort to client ({})", context.getSource().getPlayer().getUuid());
-        TimelockNetworking.s2cClearSelection(context.getSource().getPlayer());
-        return Command.SINGLE_SUCCESS;
-    }
-
-    public static int commitSelection(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-        Timelock.LOGGER.debug("Querying commit data from client ({})", context.getSource().getPlayer().getUuid());
-        TimelockNetworking.s2cQuerySelection(context.getSource().getPlayer());
-        return Command.SINGLE_SUCCESS;
-    }
-
     public static CompletableFuture<Suggestions> suggestZones(CommandContext<ServerCommandSource> context, SuggestionsBuilder builder) {
         var data = TimelockData.get(context.getSource().getWorld());
         for (var id : data.zones().keySet()) {
@@ -106,15 +94,10 @@ public class TimelockCommand {
                                                 .executes(TimelockCommand::deleteZone))
                                         .then(literal("info")
                                                 .executes(TimelockCommand::inspectZone))))
-                        .then(literal("selection")
-                                .then(literal("start")
-                                        .then(argument("zone", IdentifierArgumentType.identifier())
-                                                .suggests(TimelockCommand::suggestZones)
-                                                .executes(TimelockCommand::startSelection)))
-                                .then(literal("abort")
-                                        .executes(TimelockCommand::abortSelection))
-                                .then(literal("commit")
-                                        .executes(TimelockCommand::commitSelection)))
+                        .then(literal("start")
+                                .then(argument("zone", IdentifierArgumentType.identifier())
+                                        .suggests(TimelockCommand::suggestZones)
+                                        .executes(TimelockCommand::startSelection)))
                         .requires(source -> source.hasPermissionLevel(4))));
     }
 }
