@@ -1,6 +1,7 @@
 package com.acikek.timelock.network;
 
 import com.acikek.timelock.Timelock;
+import com.acikek.timelock.TimelockValue;
 import com.acikek.timelock.client.TimelockClient;
 import com.acikek.timelock.world.TimelockData;
 import net.fabricmc.api.EnvType;
@@ -32,16 +33,16 @@ public class TimelockNetworking {
     public static void s2cPutData(Collection<ServerPlayerEntity> players, ServerWorld world) {
         var buf = PacketByteBufs.create();
         var data = TimelockData.get(world).getData();
-        buf.writeMap(data, PacketByteBuf::writeChunkPos, PacketByteBuf::writeLong);
+        buf.writeMap(data, PacketByteBuf::writeChunkPos, (valueBuf, value) -> value.write(valueBuf));
         for (var player : players) {
             ServerPlayNetworking.send(player, PUT_DATA, buf);
         }
     }
 
-    public static void s2cUpdateData(Collection<ServerPlayerEntity> players, Collection<ChunkPos> chunks, Optional<Long> time) {
+    public static void s2cUpdateData(Collection<ServerPlayerEntity> players, Collection<ChunkPos> chunks, Optional<TimelockValue> value) {
         var buf = PacketByteBufs.create();
         buf.writeCollection(chunks, PacketByteBuf::writeChunkPos);
-        buf.writeOptional(time, PacketByteBuf::writeLong);
+        buf.writeOptional(value, (valueBuf, v) -> v.write(valueBuf));
         for (var player : players) {
             ServerPlayNetworking.send(player, UPDATE_DATA, buf);
         }
@@ -51,7 +52,7 @@ public class TimelockNetworking {
         var buf = PacketByteBufs.create();
         buf.writeIdentifier(zone);
         var manager = TimelockData.get(player.getServerWorld());
-        buf.writeLong(manager.zones().get(zone));
+        manager.zones().get(zone).write(buf);
         buf.writeCollection(manager.chunks().get(zone), PacketByteBuf::writeChunkPos);
         ServerPlayNetworking.send(player, START_SELECTION, buf);
     }
@@ -59,17 +60,17 @@ public class TimelockNetworking {
     @Environment(EnvType.CLIENT)
     public static void registerClient() {
         ClientPlayNetworking.registerGlobalReceiver(PUT_DATA, (client, handler, buf, responseSender) -> {
-            final var data = buf.readMap(PacketByteBuf::readChunkPos, PacketByteBuf::readLong);
+            final var data = buf.readMap(PacketByteBuf::readChunkPos, TimelockValue::read);
             client.execute(() -> TimelockClient.putData(data));
         });
         ClientPlayNetworking.registerGlobalReceiver(UPDATE_DATA, (client, handler, buf, responseSender) -> {
             final var chunks = buf.readCollection(ArrayList::new, PacketByteBuf::readChunkPos);
-            final var time = buf.readOptional(PacketByteBuf::readLong);
+            final var time = buf.readOptional(TimelockValue::read);
             client.execute(() -> TimelockClient.updateData(chunks, time));
         });
         ClientPlayNetworking.registerGlobalReceiver(START_SELECTION, (client, handler, buf, responseSender) -> {
             final var zone = buf.readIdentifier();
-            final var time = buf.readLong();
+            final var time = TimelockValue.read(buf);
             final var chunks = buf.readCollection(ArrayList::new, PacketByteBuf::readChunkPos);
             client.execute(() -> TimelockClient.startSelection(zone, time, chunks));
         });

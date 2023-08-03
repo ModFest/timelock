@@ -1,9 +1,11 @@
 package com.acikek.timelock.command;
 
 import com.acikek.timelock.Timelock;
+import com.acikek.timelock.TimelockValue;
 import com.acikek.timelock.network.TimelockNetworking;
 import com.acikek.timelock.world.TimelockData;
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -30,11 +32,14 @@ public class TimelockCommand {
 
     public static int setZone(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         Identifier id = IdentifierArgumentType.getIdentifier(context, "id");
-        long time = LongArgumentType.getLong(context, "time");
+        long time = LongArgumentType.getLong(context, "ticks");
+        boolean offset = BoolArgumentType.getBool(context, "offset");
+        var value = new TimelockValue(time, offset);
         var data = TimelockData.get(context.getSource().getWorld());
-        data.zones().put(id, time);
+        data.zones().put(id, value);
         data.markDirty();
         context.getSource().sendFeedback(() -> Text.translatable("command.timelock.zone.set", id, time), true);
+        TimelockNetworking.s2cUpdateData(context.getSource().getWorld().getPlayers(), data.chunks().get(id), Optional.of(value));
         return Command.SINGLE_SUCCESS;
     }
 
@@ -90,8 +95,9 @@ public class TimelockCommand {
                                 .then(argument("id", IdentifierArgumentType.identifier())
                                         .suggests(TimelockCommand::suggestZones)
                                         .then(literal("set")
-                                                .then(argument("time", LongArgumentType.longArg(0L, 24000L))
-                                                        .executes(TimelockCommand::setZone)))
+                                                .then(argument("ticks", LongArgumentType.longArg(0L, 24000L))
+                                                        .then(argument("offset", BoolArgumentType.bool())
+                                                                .executes(TimelockCommand::setZone))))
                                         .then(literal("delete")
                                                 .executes(TimelockCommand::deleteZone))
                                         .then(literal("info")

@@ -1,6 +1,7 @@
 package com.acikek.timelock.client;
 
 import com.acikek.timelock.Timelock;
+import com.acikek.timelock.TimelockValue;
 import com.acikek.timelock.client.config.TimelockConfig;
 import com.acikek.timelock.network.TimelockNetworking;
 import dev.isxander.yacl3.api.Binding;
@@ -26,14 +27,14 @@ import java.util.*;
 @Environment(EnvType.CLIENT)
 public class TimelockClient implements ClientModInitializer {
 
-    private static final Map<ChunkPos, Long> chunkData = new HashMap<>();
+    private static final Map<ChunkPos, TimelockValue> chunkData = new HashMap<>();
 
     private static ChunkPos timelockChunk = null;
-    private static long timelockValue = -1L;
+    private static TimelockValue timelockValue = null;
     private static float timelockSkyAngle = -1.0f;
 
     private static Identifier selectionZone = null;
-    private static long selectionTime = -1L;
+    private static TimelockValue selectionTime = null;
     private static final List<ChunkPos> selectionChunks = new ArrayList<>();
 
     private static TimelockConfig config;
@@ -53,49 +54,48 @@ public class TimelockClient implements ClientModInitializer {
         return selectionZone;
     }
 
-    public static long getChunkTimelock(ChunkPos pos) {
-        if (selectionTime == -1L) {
-            var time = chunkData.get(pos);
-            return time != null ? time : -1L;
+    public static TimelockValue getChunkTimelock(ChunkPos pos) {
+        if (selectionTime == null) {
+            return chunkData.get(pos);
         }
         if (!selectionChunks.contains(pos)) {
-            return -1L;
+            return null;
         }
         return selectionTime;
     }
 
-    public static void putData(Map<ChunkPos, Long> chunkData) {
+    public static void putData(Map<ChunkPos, TimelockValue> chunkData) {
         Timelock.LOGGER.debug("Received PUT: {}", chunkData);
         TimelockClient.chunkData.clear();
         TimelockClient.chunkData.putAll(chunkData);
     }
 
-    public static void updateData(List<ChunkPos> chunks, Optional<Long> time) {
-        Timelock.LOGGER.debug("Received UPDATE: {}L for {}", time.orElse(-1L), chunks);
+    public static void updateData(List<ChunkPos> chunks, Optional<TimelockValue> value) {
+        Timelock.LOGGER.debug("Received UPDATE: {} for {}", value.orElse(null), chunks);
         for (var chunk : chunks) {
-            time.ifPresent(value -> chunkData.put(chunk, value));
-            if (time.isEmpty()) {
+            value.ifPresent(v -> chunkData.put(chunk, v));
+            if (value.isEmpty()) {
                 chunkData.remove(chunk);
             }
             TimelockClient.tick(chunk, true);
         }
     }
 
-    public static void startSelection(Identifier zone, long time, Collection<ChunkPos> existing) {
+    public static void startSelection(Identifier zone, TimelockValue value, Collection<ChunkPos> existing) {
         var player = MinecraftClient.getInstance().player;
         if (selectionZone != null) {
             player.sendMessage(Text.translatable("error.timelock.selection_in_progress").formatted(Formatting.RED));
             return;
         }
         selectionZone = zone;
-        selectionTime = time;
+        selectionTime = value;
         selectionChunks.addAll(existing);
         player.sendMessage(Text.translatable("command.timelock.selection.start_client", zone));
     }
 
     public static void clearSelection() {
         selectionZone = null;
-        selectionTime = -1L;
+        selectionTime = null;
         selectionChunks.clear();
     }
 
@@ -113,17 +113,21 @@ public class TimelockClient implements ClientModInitializer {
         clearSelection();
     }
 
-    private static float getSkyAngle(long time) {
-        double d = MathHelper.fractionalPart(time / 24000.0 - 0.25);
+    private static float getSkyAngle(TimelockValue value) {
+        double d = MathHelper.fractionalPart(value.getTicks() / 24000.0 - 0.25);
         double e = 0.5 - Math.cos(d * Math.PI) / 2.0;
         return (float) (d * 2.0 + e) / 3.0f;
     }
 
     public static void tick(ChunkPos pos, boolean inTimelock) {
-        if (config.enable && inTimelock(pos) == inTimelock) {
-            timelockValue = getChunkTimelock(pos);
-            timelockChunk = timelockValue != -1L ? pos : null;
-            timelockSkyAngle = timelockValue != -1L ? getSkyAngle(timelockValue) : -1.0f;
+        boolean timelock = inTimelock(pos);
+        boolean offset = timelockValue != null && timelockValue.offset();
+        if (config.enable && (offset || timelock == inTimelock)) {
+            if (!timelock || inTimelock) {
+                timelockValue = getChunkTimelock(pos);
+            }
+            timelockChunk = timelockValue != null ? pos : null;
+            timelockSkyAngle = timelockValue != null ? getSkyAngle(timelockValue) : -1.0f;
         }
     }
 
@@ -161,6 +165,20 @@ public class TimelockClient implements ClientModInitializer {
             return ActionResult.PASS;
         });
         config = TimelockConfig.read();
+    }
+
+    public static void debug() {
+        Timelock.LOGGER.info("--- TIMELOCK DEBUG START---");
+        Timelock.LOGGER.info("Timelock enabled: {}", config.enable);
+        if (timelockValue != null) {
+            Timelock.LOGGER.info("Current timelock value: {} for chunk {}", timelockValue, timelockChunk);
+        }
+        if (selectionZone != null) {
+            Timelock.LOGGER.info("Current selection value: {} for zone '{}'", selectionTime, selectionZone);
+            Timelock.LOGGER.info("Currently selected chunks ({}): {}", selectionChunks.size(), selectionChunks);
+        }
+        Timelock.LOGGER.info("Chunk data: {}", chunkData);
+        Timelock.LOGGER.info("--- TIMELOCK DEBUG END ---");
     }
 
     public static final Binding<Boolean> ENABLE_BINDING = new Binding<>() {

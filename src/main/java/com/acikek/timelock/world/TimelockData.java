@@ -1,6 +1,7 @@
 package com.acikek.timelock.world;
 
 import com.acikek.timelock.Timelock;
+import com.acikek.timelock.TimelockValue;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import net.minecraft.nbt.NbtCompound;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 
 public class TimelockData extends PersistentState {
 
-    private final Map<Identifier, Long> zones;
+    private final Map<Identifier, TimelockValue> zones;
     private final Multimap<Identifier, ChunkPos> chunks;
 
     public TimelockData() {
@@ -24,12 +25,12 @@ public class TimelockData extends PersistentState {
         chunks = HashMultimap.create();
     }
 
-    public TimelockData(Map<Identifier, Long> zones, Multimap<Identifier, ChunkPos> chunks) {
+    public TimelockData(Map<Identifier, TimelockValue> zones, Multimap<Identifier, ChunkPos> chunks) {
         this.zones = zones;
         this.chunks = chunks;
     }
 
-    public Map<Identifier, Long> zones() {
+    public Map<Identifier, TimelockValue> zones() {
         return zones;
     }
 
@@ -37,17 +38,17 @@ public class TimelockData extends PersistentState {
         return chunks;
     }
 
-    public Map<ChunkPos, Long> getData() {
+    public Map<ChunkPos, TimelockValue> getData() {
         return chunks.entries().stream()
                 .collect(Collectors.toMap(Map.Entry::getValue, e -> zones.get(e.getKey())));
     }
 
     public static TimelockData fromNbt(NbtCompound nbt) {
         var zoneNbt = nbt.getCompound("Zones");
-        Map<Identifier, Long> zones = new HashMap<>();
+        Map<Identifier, TimelockValue> zones = new HashMap<>();
         for (var key : zoneNbt.getKeys()) {
-            var time = zoneNbt.getLong(key);
-            zones.put(new Identifier(key), time);
+            var value = zoneNbt.getCompound(key);
+            zones.put(new Identifier(key), TimelockValue.fromNbt(value));
         }
         var chunkNbt = nbt.getCompound("Chunks");
         Multimap<Identifier, ChunkPos> chunks = HashMultimap.create();
@@ -70,7 +71,7 @@ public class TimelockData extends PersistentState {
     public NbtCompound writeNbt(NbtCompound nbt) {
         var zoneNbt = new NbtCompound();
         for (var pair : zones.entrySet()) {
-            zoneNbt.putLong(pair.getKey().toString(), pair.getValue());
+            zoneNbt.put(pair.getKey().toString(), pair.getValue().toNbt());
         }
         nbt.put("Zones", zoneNbt);
         var chunkNbt = new NbtCompound();

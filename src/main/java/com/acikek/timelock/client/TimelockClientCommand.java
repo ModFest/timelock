@@ -33,12 +33,19 @@ public class TimelockClientCommand {
         return Command.SINGLE_SUCCESS;
     }
 
+    public static int debug(CommandContext<FabricClientCommandSource> context) throws CommandSyntaxException {
+        TimelockClient.debug();
+        return Command.SINGLE_SUCCESS;
+    }
+
     public static void register() {
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) ->
                 dispatcher.register(literal("timelockc")
                         .then(literal("abort")
                                 .executes(TimelockClientCommand::abortSelection))
                         .then(literal("commit")
-                                .executes(TimelockClientCommand::commitSelection))));
+                                .executes(TimelockClientCommand::commitSelection))
+                        .then(literal("debug")
+                                .executes(TimelockClientCommand::debug))));
     }
 }
