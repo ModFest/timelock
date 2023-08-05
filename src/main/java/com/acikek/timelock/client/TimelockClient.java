@@ -65,6 +65,7 @@ public class TimelockClient implements ClientModInitializer {
         Timelock.LOGGER.debug("Received PUT: {}", chunkData);
         TimelockClient.chunkData.clear();
         TimelockClient.chunkData.putAll(chunkData);
+        TimelockClient.resetTimelock();
     }
 
     public static void updateData(List<ChunkPos> chunks, Optional<TimelockValue> value) {
