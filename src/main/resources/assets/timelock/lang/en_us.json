@@ -1,7 +1,8 @@
 {
   "command.timelock.zone.set": "Set zone '%s' to %s ticks",
   "command.timelock.zone.delete": "Deleted zone '%s' and updated %s chunks",
-  "command.timelock.zone.inspect": "Zone '%s' is locked to %s ticks and spans %s chunks",
+  "command.timelock.zone.inspect.locked": "Zone '%s' is locked to %s ticks and spans %s chunks",
+  "command.timelock.zone.inspect.offset": "Zone '%s' is offset by %s ticks and spans %s chunks",
   "command.timelock.selection.start_client": "Editing selection for zone '%s'",
   "command.timelock.selection.abort_client": "Aborted current selection for zone '%s'; no edits committed",
   "command.timelock.selection.commit_client": "Committing %s chunks for zone '%s'",

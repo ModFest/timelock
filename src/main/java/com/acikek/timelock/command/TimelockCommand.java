@@ -46,7 +46,6 @@ public class TimelockCommand {
     public static int deleteZone(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         Identifier id = IdentifierArgumentType.getIdentifier(context, "id");
         var data = TimelockData.get(context.getSource().getWorld());
-        System.out.println(data.chunks());
         var zone = data.zones().remove(id);
         if (zone == null) {
             throw INVALID_ZONE.create(id);
@@ -66,7 +65,8 @@ public class TimelockCommand {
             throw INVALID_ZONE.create(id);
         }
         var chunks = data.chunks().get(id).size();
-        context.getSource().sendFeedback(() -> Text.translatable("command.timelock.zone.inspect", id, time, chunks), false);
+        var type = time.offset() ? "offset" : "locked";
+        context.getSource().sendFeedback(() -> Text.translatable("command.timelock.zone.inspect." + type, id, time.ticks(), chunks), false);
         return Command.SINGLE_SUCCESS;
     }
 
