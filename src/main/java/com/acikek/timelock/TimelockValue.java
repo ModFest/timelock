@@ -5,6 +5,9 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.util.math.MathHelper;
+
+import java.util.function.Supplier;
 
 public record TimelockValue(long ticks, boolean offset) {
 
@@ -43,12 +46,27 @@ public record TimelockValue(long ticks, boolean offset) {
     }
 
     @Environment(EnvType.CLIENT)
-    public long getTicks() {
+    private long getTicks() {
         if (!offset) {
             return ticks;
         }
         long worldTicks = getTimeOfDay();
         long time = worldTicks + ticks;
         return time % 24000L;
+    }
+
+    private static float getSkyAngle(long ticks) {
+        double d = MathHelper.fractionalPart(ticks / 24000.0 - 0.25);
+        double e = 0.5 - Math.cos(d * Math.PI) / 2.0;
+        return (float) (d * 2.0 + e) / 3.0f;
+    }
+
+    @Environment(EnvType.CLIENT)
+    public Supplier<Float> getSkyAngle() {
+        if (offset) {
+            return () -> getSkyAngle(getTicks());
+        }
+        float angle = getSkyAngle(ticks);
+        return () -> angle;
     }
 }
