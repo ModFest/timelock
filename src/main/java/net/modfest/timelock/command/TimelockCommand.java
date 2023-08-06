@@ -1,9 +1,9 @@
-package com.acikek.timelock.command;
+package net.modfest.timelock.command;
 
-import com.acikek.timelock.Timelock;
-import com.acikek.timelock.TimelockValue;
-import com.acikek.timelock.network.TimelockNetworking;
-import com.acikek.timelock.world.TimelockData;
+import net.modfest.timelock.Timelock;
+import net.modfest.timelock.TimelockValue;
+import net.modfest.timelock.network.TimelockNetworking;
+import net.modfest.timelock.world.TimelockData;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;

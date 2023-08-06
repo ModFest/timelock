@@ -1,4 +1,4 @@
-package com.acikek.timelock;
+package net.modfest.timelock;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

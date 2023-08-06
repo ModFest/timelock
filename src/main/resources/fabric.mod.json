@@ -16,13 +16,13 @@
   "environment": "*",
   "entrypoints": {
     "client": [
-      "com.acikek.timelock.client.TimelockClient"
+      "net.modfest.timelock.client.TimelockClient"
     ],
     "main": [
-      "com.acikek.timelock.Timelock"
+      "net.modfest.timelock.Timelock"
     ],
     "modmenu": [
-      "com.acikek.timelock.client.config.TimelockModMenuIntegration"
+      "net.modfest.timelock.client.config.TimelockModMenuIntegration"
     ]
   },
   "mixins": [

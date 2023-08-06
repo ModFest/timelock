@@ -1,6 +1,6 @@
-package com.acikek.timelock.client.config;
+package net.modfest.timelock.client.config;
 
-import com.acikek.timelock.Timelock;
+import net.modfest.timelock.Timelock;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;

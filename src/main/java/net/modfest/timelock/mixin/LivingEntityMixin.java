@@ -1,6 +1,6 @@
-package com.acikek.timelock.mixin;
+package net.modfest.timelock.mixin;
 
-import com.acikek.timelock.client.TimelockClient;
+import net.modfest.timelock.client.TimelockClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.Vec3d;

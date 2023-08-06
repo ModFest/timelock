@@ -1,9 +1,9 @@
-package com.acikek.timelock.client;
+package net.modfest.timelock.client;
 
-import com.acikek.timelock.Timelock;
-import com.acikek.timelock.TimelockValue;
-import com.acikek.timelock.client.config.TimelockConfig;
-import com.acikek.timelock.network.TimelockNetworking;
+import net.modfest.timelock.Timelock;
+import net.modfest.timelock.TimelockValue;
+import net.modfest.timelock.client.config.TimelockConfig;
+import net.modfest.timelock.network.TimelockNetworking;
 import dev.isxander.yacl3.api.Binding;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;

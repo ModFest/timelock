@@ -1,7 +1,7 @@
-package com.acikek.timelock;
+package net.modfest.timelock;
 
-import com.acikek.timelock.command.TimelockCommand;
-import com.acikek.timelock.network.TimelockNetworking;
+import net.modfest.timelock.command.TimelockCommand;
+import net.modfest.timelock.network.TimelockNetworking;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.LogManager;

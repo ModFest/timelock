@@ -1,4 +1,4 @@
-package com.acikek.timelock.client;
+package net.modfest.timelock.client;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;

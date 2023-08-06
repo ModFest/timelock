@@ -1,6 +1,6 @@
-package com.acikek.timelock.client.config;
+package net.modfest.timelock.client.config;
 
-import com.acikek.timelock.client.TimelockClient;
+import net.modfest.timelock.client.TimelockClient;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import dev.isxander.yacl3.api.*;

@@ -1,7 +1,7 @@
-package com.acikek.timelock.world;
+package net.modfest.timelock.world;
 
-import com.acikek.timelock.Timelock;
-import com.acikek.timelock.TimelockValue;
+import net.modfest.timelock.Timelock;
+import net.modfest.timelock.TimelockValue;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import net.minecraft.nbt.NbtCompound;
