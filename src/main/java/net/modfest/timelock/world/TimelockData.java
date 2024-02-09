@@ -1,5 +1,7 @@
 package net.modfest.timelock.world;
 
+import net.minecraft.datafixer.DataFixTypes;
+import net.minecraft.item.map.MapState;
 import net.modfest.timelock.Timelock;
 import net.modfest.timelock.TimelockValue;
 import com.google.common.collect.HashMultimap;
@@ -28,6 +30,10 @@ public class TimelockData extends PersistentState {
     public TimelockData(Map<Identifier, TimelockValue> zones, Multimap<Identifier, ChunkPos> chunks) {
         this.zones = zones;
         this.chunks = chunks;
+    }
+
+    public static PersistentState.Type<TimelockData> getPersistentStateType() {
+        return new PersistentState.Type<>(TimelockData::new, TimelockData::fromNbt, null);
     }
 
     public Map<Identifier, TimelockValue> zones() {
@@ -64,7 +70,7 @@ public class TimelockData extends PersistentState {
 
     public static TimelockData get(ServerWorld world) {
         return world.getPersistentStateManager()
-                .getOrCreate(TimelockData::fromNbt, TimelockData::new, Timelock.ID);
+                .getOrCreate(TimelockData.getPersistentStateType(), Timelock.ID);
     }
 
     @Override
