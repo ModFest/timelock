@@ -27,7 +27,7 @@ import static net.minecraft.server.command.CommandManager.literal;
 public class TimelockCommand {
 
     public static final DynamicCommandExceptionType INVALID_ZONE = new DynamicCommandExceptionType(
-            id -> Text.translatable("error.timelock.invalid_zone", id)
+            id -> Text.translatable("error.timelock.invalid_zone", id.toString())
     );
 
     public static int setZone(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
@@ -38,7 +38,7 @@ public class TimelockCommand {
         var data = TimelockData.get(context.getSource().getWorld());
         data.zones().put(id, value);
         data.markDirty();
-        context.getSource().sendFeedback(() -> Text.translatable("command.timelock.zone.set", id, time), true);
+        context.getSource().sendFeedback(() -> Text.translatable("command.timelock.zone.set", id.toString(), time), true);
         TimelockNetworking.s2cUpdateData(context.getSource().getWorld().getPlayers(), data.chunks().get(id), Optional.of(value));
         return Command.SINGLE_SUCCESS;
     }
@@ -52,7 +52,7 @@ public class TimelockCommand {
         }
         var chunks = data.chunks().removeAll(id);
         data.markDirty();
-        context.getSource().sendFeedback(() -> Text.translatable("command.timelock.zone.delete", id, chunks.size()), true);
+        context.getSource().sendFeedback(() -> Text.translatable("command.timelock.zone.delete", id.toString(), chunks.size()), true);
         TimelockNetworking.s2cUpdateData(context.getSource().getWorld().getPlayers(), chunks, Optional.empty());
         return Command.SINGLE_SUCCESS;
     }
@@ -66,7 +66,7 @@ public class TimelockCommand {
         }
         var chunks = data.chunks().get(id).size();
         var type = time.offset() ? "offset" : "locked";
-        context.getSource().sendFeedback(() -> Text.translatable("command.timelock.zone.inspect." + type, id, time.ticks(), chunks), false);
+        context.getSource().sendFeedback(() -> Text.translatable("command.timelock.zone.inspect." + type, id.toString(), time.ticks(), chunks), false);
         return Command.SINGLE_SUCCESS;
     }
 
