@@ -2,6 +2,7 @@ package net.modfest.timelock.world;
 
 import net.minecraft.datafixer.DataFixTypes;
 import net.minecraft.item.map.MapState;
+import net.minecraft.registry.RegistryWrapper;
 import net.modfest.timelock.Timelock;
 import net.modfest.timelock.TimelockValue;
 import com.google.common.collect.HashMultimap;
@@ -49,12 +50,12 @@ public class TimelockData extends PersistentState {
                 .collect(Collectors.toMap(Map.Entry::getValue, e -> zones.get(e.getKey())));
     }
 
-    public static TimelockData fromNbt(NbtCompound nbt) {
+    public static TimelockData fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
         var zoneNbt = nbt.getCompound("Zones");
         Map<Identifier, TimelockValue> zones = new HashMap<>();
         for (var key : zoneNbt.getKeys()) {
             var value = zoneNbt.getCompound(key);
-            zones.put(new Identifier(key), TimelockValue.fromNbt(value));
+            zones.put(Identifier.of(key), TimelockValue.fromNbt(value));
         }
         var chunkNbt = nbt.getCompound("Chunks");
         Multimap<Identifier, ChunkPos> chunks = HashMultimap.create();
@@ -63,7 +64,7 @@ public class TimelockData extends PersistentState {
             var list = Arrays.stream(array)
                     .mapToObj(ChunkPos::new)
                     .toList();
-            chunks.putAll(new Identifier(key), list);
+            chunks.putAll(Identifier.of(key), list);
         }
         return new TimelockData(zones, chunks);
     }
@@ -74,7 +75,7 @@ public class TimelockData extends PersistentState {
     }
 
     @Override
-    public NbtCompound writeNbt(NbtCompound nbt) {
+    public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
         var zoneNbt = new NbtCompound();
         for (var pair : zones.entrySet()) {
             zoneNbt.put(pair.getKey().toString(), pair.getValue().toNbt());

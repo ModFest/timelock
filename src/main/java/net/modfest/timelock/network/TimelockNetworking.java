@@ -1,5 +1,6 @@
 package net.modfest.timelock.network;
 
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.modfest.timelock.Timelock;
 import net.modfest.timelock.TimelockValue;
 import net.modfest.timelock.client.TimelockClient;
@@ -13,8 +14,6 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.ChunkPos;
 
@@ -31,48 +30,36 @@ public class TimelockNetworking {
     public static final Identifier SEND_SELECTION = Timelock.id("send_selection");
 
     public static void s2cPutData(Collection<ServerPlayerEntity> players, ServerWorld world) {
-        var buf = PacketByteBufs.create();
         var data = TimelockData.get(world).getData();
-        buf.writeMap(data, PacketByteBuf::writeChunkPos, (valueBuf, value) -> value.write(valueBuf));
+        TimelockPutDataPayload payload = new TimelockPutDataPayload(data);
         for (var player : players) {
-            ServerPlayNetworking.send(player, PUT_DATA, buf);
+            ServerPlayNetworking.send(player, payload);
         }
     }
 
     public static void s2cUpdateData(Collection<ServerPlayerEntity> players, Collection<ChunkPos> chunks, Optional<TimelockValue> value) {
-        var buf = PacketByteBufs.create();
-        buf.writeCollection(chunks, PacketByteBuf::writeChunkPos);
-        buf.writeOptional(value, (valueBuf, v) -> v.write(valueBuf));
+        TimelockUpdateDataPayload payload = new TimelockUpdateDataPayload(chunks.stream().toList(), value);
         for (var player : players) {
-            ServerPlayNetworking.send(player, UPDATE_DATA, buf);
+            ServerPlayNetworking.send(player, payload);
         }
     }
 
     public static void s2cStartSelection(ServerPlayerEntity player, Identifier zone) {
-        var buf = PacketByteBufs.create();
-        buf.writeIdentifier(zone);
         var manager = TimelockData.get(player.getServerWorld());
-        manager.zones().get(zone).write(buf);
-        buf.writeCollection(manager.chunks().get(zone), PacketByteBuf::writeChunkPos);
-        ServerPlayNetworking.send(player, START_SELECTION, buf);
+        TimelockStartSelectionPayload startSelectionPayload = new TimelockStartSelectionPayload(zone, manager.zones().get(zone), manager.chunks().get(zone).stream().toList());
+        ServerPlayNetworking.send(player, startSelectionPayload);
     }
 
     @Environment(EnvType.CLIENT)
     public static void registerClient() {
-        ClientPlayNetworking.registerGlobalReceiver(PUT_DATA, (client, handler, buf, responseSender) -> {
-            final var data = buf.readMap(PacketByteBuf::readChunkPos, TimelockValue::read);
-            client.execute(() -> TimelockClient.putData(data));
+        ClientPlayNetworking.registerGlobalReceiver(TimelockPutDataPayload.ID, (payload, context) -> {
+            context.client().execute(() -> TimelockClient.putData(payload.data()));
         });
-        ClientPlayNetworking.registerGlobalReceiver(UPDATE_DATA, (client, handler, buf, responseSender) -> {
-            final var chunks = buf.readCollection(ArrayList::new, PacketByteBuf::readChunkPos);
-            final var time = buf.readOptional(TimelockValue::read);
-            client.execute(() -> TimelockClient.updateData(chunks, time));
+        ClientPlayNetworking.registerGlobalReceiver(TimelockUpdateDataPayload.ID, (payload, context) -> {
+            context.client().execute(() -> TimelockClient.updateData(payload.chunks(), payload.time()));
         });
-        ClientPlayNetworking.registerGlobalReceiver(START_SELECTION, (client, handler, buf, responseSender) -> {
-            final var zone = buf.readIdentifier();
-            final var time = TimelockValue.read(buf);
-            final var chunks = buf.readCollection(ArrayList::new, PacketByteBuf::readChunkPos);
-            client.execute(() -> TimelockClient.startSelection(zone, time, chunks));
+        ClientPlayNetworking.registerGlobalReceiver(TimelockStartSelectionPayload.ID, (payload, context) -> {
+            context.client().execute(() -> TimelockClient.startSelection(payload.zone(), payload.time(), payload.chunks()));
         });
     }
 
@@ -82,21 +69,14 @@ public class TimelockNetworking {
                 s2cPutData(Collections.singletonList(player), world);
             }
         });
-        ServerPlayNetworking.registerGlobalReceiver(SEND_SELECTION, (server, player, handler, buf, responseSender) -> {
-            final var players = player.getServerWorld().getPlayers(p -> p != player);
-            final var manager = TimelockData.get(player.getServerWorld());
-            final var zone = buf.readIdentifier();
-            final var chunks = buf.readCollection(ArrayList::new, PacketByteBuf::readChunkPos);
-            server.execute(() -> {
-                if (!player.hasPermissionLevel(4)) {
-                    player.sendMessage(Text.translatable("error.timelock.not_elevated").formatted(Formatting.RED));
-                    return;
-                }
-                var time = Optional.ofNullable(manager.zones().get(zone));
-                s2cUpdateData(players, chunks, time);
-                manager.chunks().replaceValues(zone, chunks);
-                manager.markDirty();
-            });
+
+        PayloadTypeRegistry.playC2S().register(TimelockSendSelectionPayload.ID, TimelockSendSelectionPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(TimelockSendSelectionPayload.ID, (payload, context) -> {
+            payload.handle(context.server(), context.player());
         });
+
+        PayloadTypeRegistry.playS2C().register(TimelockUpdateDataPayload.ID, TimelockUpdateDataPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(TimelockPutDataPayload.ID, TimelockPutDataPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(TimelockStartSelectionPayload.ID, TimelockStartSelectionPayload.CODEC);
     }
 }

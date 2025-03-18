@@ -21,7 +21,7 @@ public class TimelockClientCommand {
         }
         TimelockClient.clearSelection();
         TimelockClient.resetTimelock();
-        context.getSource().sendFeedback(Text.translatable("command.timelock.selection.abort_client", zone));
+        context.getSource().sendFeedback(Text.translatable("command.timelock.selection.abort_client", zone.toString()));
         return Command.SINGLE_SUCCESS;
     }
 

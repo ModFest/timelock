@@ -21,6 +21,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.modfest.timelock.network.TimelockSendSelectionPayload;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -100,13 +101,11 @@ public class TimelockClient implements ClientModInitializer {
     }
 
     public static void sendSelection() {
-        var buf = PacketByteBufs.create();
-        buf.writeIdentifier(selectionZone);
-        buf.writeCollection(selectionChunks, PacketByteBuf::writeChunkPos);
+        TimelockSendSelectionPayload payload = new TimelockSendSelectionPayload(selectionZone, selectionChunks);
         MinecraftClient.getInstance().player.sendMessage(
-                Text.translatable("command.timelock.selection.commit_client", selectionChunks.size(), selectionZone)
+                Text.translatable("command.timelock.selection.commit_client", selectionChunks.size(), selectionZone.toString())
         );
-        ClientPlayNetworking.send(TimelockNetworking.SEND_SELECTION, buf);
+        ClientPlayNetworking.send(payload);
         for (var chunk : selectionChunks) {
             chunkData.put(chunk, selectionTime);
         }

@@ -14,7 +14,7 @@ public class Timelock implements ModInitializer {
     public static final Logger LOGGER = LogManager.getLogger(ID);
 
     public static Identifier id(String path) {
-        return new Identifier(ID, path);
+        return Identifier.of(ID, path);
     }
 
     @Override
