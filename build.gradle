@@ -22,6 +22,19 @@ repositories {
     maven {
         url "https://oss.sonatype.org/content/repositories/snapshots/"
     }
+
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
 }
 
 dependencies {
@@ -38,6 +51,8 @@ dependencies {
 
     // ModMenu
     modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+
+    modImplementation "maven.modrinth:area_lib:0.3.6"
 }
 
 processResources {

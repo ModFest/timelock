@@ -1,9 +1,11 @@
 package net.modfest.timelock;
 
+import dev.doublekekse.area_lib.component.AreaDataComponentType;
+import dev.doublekekse.area_lib.registry.AreaDataComponentTypeRegistry;
 import net.modfest.timelock.command.TimelockCommand;
-import net.modfest.timelock.network.TimelockNetworking;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
+import net.modfest.timelock.world.TimelockAreaComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,10 +19,12 @@ public class Timelock implements ModInitializer {
         return Identifier.of(ID, path);
     }
 
+    public static final AreaDataComponentType<TimelockAreaComponent> TIMELOCK_AREA_COMPONENT =
+            AreaDataComponentTypeRegistry.registerTracking(Timelock.id("time_zone"), TimelockAreaComponent::new);
+
     @Override
     public void onInitialize() {
         LOGGER.info("Initializing Timelock...");
-        TimelockNetworking.register();
         TimelockCommand.register();
     }
 }

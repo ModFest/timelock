@@ -13,5 +13,7 @@
   "message.timelock.chunk_select": "Selected chunk %s",
   "message.timelock.chunk_deselect": "De-selected chunk %s",
   "config.timelock.enable.name": "Enable",
-  "config.timelock.enable.description": "Whether timelocked chunks should change the client-side world time"
+  "config.timelock.enable.description": "Whether timelocked chunks should change the client-side world time",
+  "timelock.command.set.success": "Set timelock for area",
+  "timelock.command.remove.success": "Removed timelock for area"
 }
